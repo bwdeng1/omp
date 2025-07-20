@@ -1,0 +1,19 @@
+
+# CLI tool, only in development environment.
+# https://goframe.org/docs/cli
+gfcli:
+  gen:
+    dao:
+      - link: "mysql:root:123456@tcp(192.168.20.129:3306)/omp?loc=Local&parseTime=true"
+        group: default
+        tables: "user, permission, role"
+        withTime: false
+        gJsonSupport: true
+        overwriteDao: true
+        descriptionTag: true
+        #        jsonCase: Snake
+        clear: true
+  docker:
+    build: "-a amd64 -s linux -p temp -ew"
+    tagPrefixes:
+      - my.image.pub/my-app
