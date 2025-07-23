@@ -2,13 +2,14 @@ package service
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/encoding/gjson"
 	v1 "omp/api/public/v1"
 	"omp/internal/model"
 	"omp/internal/model/do"
 	"omp/internal/model/entity"
 	"omp/utility/util"
 	"time"
+
+	"github.com/gogf/gf/v2/encoding/gjson"
 
 	jwt "github.com/gogf/gf-jwt/v2"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -21,6 +22,10 @@ func Auth() *jwt.GfJWTMiddleware {
 	return authService
 }
 
+// 信息提取和格式化工具
+// gjson.New会把它包装成一个 gjson 对象
+// .Scan(&u)这是最神奇的一步。它相当于把从保安那里拿到的零散信息（map）
+// 自动地填写到一张标准的名片（model.RequestUser 结构体）里。
 func CurrentUser(ctx context.Context) (u *model.RequestUser) {
 	_ = gjson.New(authService.GetPayload(ctx)).Scan(&u)
 	return
@@ -29,7 +34,7 @@ func CurrentUser(ctx context.Context) (u *model.RequestUser) {
 func init() {
 	ctx := context.Background()
 	auth := jwt.New(&jwt.GfJWTMiddleware{
-		Realm:           "devops-super",
+		Realm:           "omp",
 		Key:             g.Cfg().MustGet(context.Background(), "jwt.secret").Bytes(),
 		Timeout:         g.Cfg().MustGet(ctx, "jwt.expire").Duration(),
 		MaxRefresh:      g.Cfg().MustGet(ctx, "jwt.expire").Duration(),
@@ -45,29 +50,24 @@ func init() {
 	authService = auth
 }
 
-// PayloadFunc is a callback function that will be called during login.
-// Using this function it is possible to add additional payload data to the webtoken.
-// The data is then made available during requests via c.Get("JWT_PAYLOAD").
-// Note that the payload is not encrypted.
-// The attributes mentioned on jwt.io can't be used as keys for the map.
-// Optional, by default no additional data will be set.
 func PayloadFunc(data any) jwt.MapClaims {
+	// 拿到认证官传过来的用户对象
 	userInfo := data.(*entity.User)
+	// 创建一个空的信息表
 	claims := make(jwt.MapClaims)
+	// 把需要的信息登记到表上
 	claims["userId"] = userInfo.Id
 	claims["username"] = userInfo.Username
 	claims["realName"] = userInfo.RealName
 	return claims
 }
 
-// IdentityHandler get the identity from JWT and set the identity for every request
-// Using this function, by r.GetParam("id") get identity
+// 一个“指针”，专门用来告诉 JWT 框架，在所有用户信息中，哪一个才是代表用户唯一身份的“主键”。
 func IdentityHandler(ctx context.Context) interface{} {
 	claims := jwt.ExtractClaims(ctx)
 	return claims[authService.IdentityKey]
 }
 
-// Unauthorized is used to define customized Unauthorized callback function.
 func Unauthorized(ctx context.Context, code int, message string) {
 	r := g.RequestFromCtx(ctx)
 	g.Log().Debug(ctx, message)
@@ -75,18 +75,17 @@ func Unauthorized(ctx context.Context, code int, message string) {
 		"code":    code,
 		"message": message,
 	})
+	//ExitAll 是 GF 的语法糖
 	r.ExitAll()
 }
 
-// Authenticator is used to validate login parameters.
-// It must return user data as user identifier, it will be stored in Claim Array.
-// if your identityKey is 'id', your user data must have 'id'
-// Check error (e) to determine the appropriate error message.
+// Authenticator 用于校验登录参数。
 func Authenticator(ctx context.Context) (interface{}, error) {
 	var (
 		r   = g.RequestFromCtx(ctx)
 		req *v1.LoginReq
 	)
+	//从 HTTP 请求中读取用户传来的参数，并绑定到 Go 的结构体里
 	if err := r.Parse(&req); err != nil {
 		return nil, err
 	}

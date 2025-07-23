@@ -1,3 +1,2 @@
-# orm运维系统
-Quick Start: 
-- https://goframe.org/quick
+# omp运维系统 
+- https://github.com/bwdeng1/omp

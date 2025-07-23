@@ -25,11 +25,12 @@ func New() *sUser {
 }
 
 func (s *sUser) Add(ctx context.Context, in *entity.User) (err error) {
-	// 具体的实现内容，工具并不关心
+	// 1. 密码加密
 	in.Password, err = util.EncryptPassword(in.Password)
 	if err != nil {
 		return
 	}
+	// 2. 调用 DAO 将数据插入数据库
 	_, err = dao.User.Ctx(ctx).Insert(in)
 	return
 }
@@ -52,11 +53,20 @@ func (*sUser) GetLst(ctx context.Context) (out []*entity.User, err error) {
 
 func (*sUser) GetPageLst(ctx context.Context, in *api.PageLstReq) (out *api.PageLstRes[*entity.User], err error) {
 	out = &api.PageLstRes[*entity.User]{}
+	// 1. 构建基础查询模型
 	m := dao.User.Ctx(ctx).Safe(true)
+	// 2. 处理动态搜索条件
+	//如果 Search 不为空，就对 username 和 real_name 做模糊匹配（LIKE），任意一个匹配就算符合。
+	//.WhereOr 表示追加一个 OR 条件 到 SQL 的 WHERE 子句里
+	//m.Builder() 是生成一个新的 Where 构造器（builder），用来组合复杂的条件
 	if !gutil.IsEmpty(in.Search) {
 		m = m.WhereOr(m.Builder().WhereOrLike(cols.Username, in.SearchStr()).WhereOrLike(cols.RealName, in.SearchStr()))
 	}
 
+	//in.Wheres 是一个 *gjson.Json，代表前端传来的 JSON 格式的【筛选条件】。
+	//.Get("xxx") 是从 JSON 里找对应字段。
+	//.IsNil() 判断有没有传。
+	//.Bool() / .Int() 是把 JSON 里的值转成 Go 的布尔值或整数。
 	if enabled := in.Wheres.Get("enabled"); !enabled.IsNil() {
 		m = m.Where(cols.Enabled, enabled.Bool())
 	}
@@ -64,7 +74,7 @@ func (*sUser) GetPageLst(ctx context.Context, in *api.PageLstReq) (out *api.Page
 	if deptId := in.Wheres.Get("deptId"); !deptId.IsNil() {
 		m = m.Where(cols.DeptId, deptId.Int())
 	}
-
+	// 3. 执行查询，同时完成分页和总数统计
 	err = m.Offset(in.Offset()).Limit(in.Limit()).FieldsEx(cols.Password).
 		ScanAndCount(&out.List, &out.Total, false)
 	return

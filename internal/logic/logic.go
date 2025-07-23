@@ -5,6 +5,7 @@
 package logic
 
 import (
+	_ "omp/internal/logic/common"
 	_ "omp/internal/logic/context"
 	_ "omp/internal/logic/middleware"
 	_ "omp/internal/logic/permission"

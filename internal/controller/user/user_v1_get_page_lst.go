@@ -2,13 +2,13 @@ package user
 
 import (
 	"context"
-
-	"github.com/gogf/gf/v2/errors/gcode"
-	"github.com/gogf/gf/v2/errors/gerror"
+	"omp/internal/service"
 
 	"omp/api/user/v1"
 )
 
 func (c *ControllerV1) GetPageLst(ctx context.Context, req *v1.GetPageLstReq) (res *v1.GetPageLstRes, err error) {
-	return nil, gerror.NewCode(gcode.CodeNotImplemented)
+	res = new(v1.GetPageLstRes)
+	res.PageLstRes, err = service.User().GetPageLst(ctx, req.PageLstReq)
+	return
 }

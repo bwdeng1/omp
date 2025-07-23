@@ -19,6 +19,7 @@ var (
 		Usage: "main",
 		Brief: "start http server",
 		Func: func(ctx context.Context, parser *gcmd.Parser) (err error) {
+
 			s := g.Server()
 			s.Group("/", func(group *ghttp.RouterGroup) {
 				group.Middleware(ghttp.MiddlewareHandlerResponse)
@@ -39,6 +40,10 @@ var (
 				})
 
 			})
+			// 初始化
+			if err = service.Context().Init(ctx); err != nil {
+				g.Log().Fatal(ctx, err)
+			}
 			s.Run()
 			return nil
 		},

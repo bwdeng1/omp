@@ -7,11 +7,13 @@ import (
 	"omp/internal/model/mid"
 )
 
+// AddReq 新增用户的请求结构体
 type AddReq struct {
-	g.Meta `method:"post" path:"/user" summary:"新增用户" tags:"用户"`
-	*mid.User
+	g.Meta    `method:"post" path:"/user" summary:"新增用户" tags:"用户"`
+	*mid.User // 嵌套了 mid.User，复用了字段和校验规则
 }
 
+// 新增成功无需返回特定数据，响应一个空对象即可
 type AddRes struct{}
 
 type GetLstReq struct {
@@ -22,13 +24,15 @@ type GetLstRes struct {
 	List []*entity.User `json:"list"`
 }
 
+// GetPageLstReq 获取用户分页列表的请求结构体
 type GetPageLstReq struct {
-	g.Meta `method:"get" path:"/user/page-list" summary:"分页获取用户列表" tags:"用户"`
-	*api.PageLstReq
+	g.Meta          `method:"get" path:"/user/page-list" summary:"分页获取用户列表" tags:"用户"`
+	*api.PageLstReq // 嵌套了通用的分页请求参数
 }
 
+// GetPageLstRes 获取用户分页列表的响应结构体
 type GetPageLstRes struct {
-	*api.PageLstRes[*entity.User]
+	*api.PageLstRes[*entity.User] // 嵌套了通用的分页响应结构，并指定列表项类型为 entity.User
 }
 
 type UptReq struct {
