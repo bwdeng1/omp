@@ -6,7 +6,7 @@ gfcli:
     dao:
       - link: "mysql:root:123456@tcp(192.168.20.129:3306)/omp?loc=Local&parseTime=true"
         group: default
-        tables: "user, permission, role"
+        tables: "user, permission, role,nginx_switch_status"
         withTime: false
         gJsonSupport: true
         overwriteDao: true

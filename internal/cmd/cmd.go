@@ -5,7 +5,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gcmd"
-	"omp/internal/controller/common"
+	"omp/internal/controller/nginx"
 	"omp/internal/controller/permission"
 	"omp/internal/controller/public"
 	"omp/internal/controller/role"
@@ -25,6 +25,7 @@ var (
 				group.Middleware(ghttp.MiddlewareHandlerResponse)
 				group.Bind(
 					public.NewV1(),
+					nginx.NewV1(), //域名切换
 				)
 				//权限控制路由
 				group.Group("/", func(group *ghttp.RouterGroup) {
@@ -34,7 +35,6 @@ var (
 						user.NewV1(),       // 用户
 						permission.NewV1(), // 权限
 						role.NewV1(),       // 角色
-						common.NewV1(),     // 公共、通用接口
 					)
 
 				})
